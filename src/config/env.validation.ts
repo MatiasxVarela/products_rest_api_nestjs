@@ -1,5 +1,13 @@
 import { plainToInstance } from 'class-transformer';
-import { IsNumber, IsPositive, Max, Min, validateSync } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsString,
+  Max,
+  Min,
+  validateSync,
+} from 'class-validator';
 
 class EnvironmentVariables {
   @IsNumber()
@@ -11,6 +19,10 @@ class EnvironmentVariables {
   @Min(0)
   @Max(65535)
   PORT: number = 3000;
+
+  @IsString()
+  @IsNotEmpty()
+  DATABASE_URL: string;
 }
 
 export function validate(config: Record<string, unknown>) {
