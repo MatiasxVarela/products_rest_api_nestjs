@@ -1,0 +1,12 @@
+node_modules
+dist
+generated
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.env
+.env.*
+*.log
+test/
+*.spec.ts

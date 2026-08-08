@@ -16,9 +16,26 @@ class EnvironmentVariables {
   PRECIO_USD: number;
 
   @IsNumber()
-  @Min(0)
+  @Min(1)
   @Max(65535)
   PORT: number = 3000;
+
+  @IsString()
+  @IsNotEmpty()
+  DB_ROOT_PASSWORD: string;
+
+  @IsString()
+  @IsNotEmpty()
+  DB_NAME: string;
+
+  @IsNumber()
+  @Min(1)
+  @Max(65535)
+  DB_PORT: number = 3306;
+
+  @IsString()
+  @IsNotEmpty()
+  DB_HOST: string;
 
   @IsString()
   @IsNotEmpty()
