@@ -9,7 +9,7 @@ import {
   validateSync,
 } from 'class-validator';
 
-class EnvironmentVariables {
+export class EnvironmentVariables {
   @IsNumber()
   @IsPositive()
   @Min(0)
