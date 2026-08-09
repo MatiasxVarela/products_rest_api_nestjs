@@ -1,99 +1,287 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Api crud de productos
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Api rest para manejar un catálogo de productos, con cálculo del precio de los productos a dólares.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Instrucciones de instalación
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+### Instalación con docker
 
 ```bash
-$ npm install
+git clone https://github.com/MatiasxVarela/products_rest_api_nestjs
+
+cd products_rest_api_nestjs
+
+cp .env.example .env
+
+docker compose up --build
 ```
 
-## Compile and run the project
+### Instalación para desarrollo
 
 ```bash
-# development
-$ npm run start
+npm install
 
-# watch mode
-$ npm run start:dev
+cp .env.example .env
 
-# production mode
-$ npm run start:prod
+docker compose up -d db
+
+npx prisma migrate dev
+
+
+npm run start:dev
 ```
 
-## Run tests
+Queda expuesto por defecto en el puerto local 3000
+
+## Configuración del entorno
+
+| Variable           | Descripción          | Ejemplo           |
+| ------------------ | -------------------- | ----------------- |
+| `PORT`             | Puerto backend       | `3000`            |
+| `PRECIO_USD`       | Cotización del dólar | `1500`            |
+| `DB_HOST`          | Host MySQL           | `localhost`       |
+| `DB_PORT`          | Puerto MySQL         | `3306`            |
+| `DB_NAME`          | Nombre de la DB      | `products_db`     |
+| `DB_ROOT_PASSWORD` | DB root password     | `example`         |
+| `DATABASE_URL`     | DB url               | `mysql://root...` |
+
+Recomendamos que `DATABASE_URL` se auto componga ejemplo:
+
+```
+DATABASE_URL=mysql://root:${DB_ROOT_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+```
+
+## Configuración de PRECIO_USD
+
+Se usa para calcular el valor en USD de los productos almacenados.
+
+### ⚠️ Importante ⚠️
+
+`PRECIO_USD` Es el único lugar donde se almacena el precio del dólar.
+
+Con este valor de referencia se hacen TODAS las operaciones para ver el valor del producto en dólares, ya que este `precio_usd` del producto no se almacena en la DB.
+
+### Cómo configurarlo
+
+El valor de cambio del dólar se almacena en la variable de entorno `PRECIO_USD`
+
+Para el cálculo se hace `precio_usd` = `precio` / `PRECIO_USD`
+
+Los precios de los productos cuando retornan se ven algo así:
+
+```json
+{
+  "precio": "15000.00",
+  "precio_usd": "10.00"
+}
+```
+
+En el caso de ser necesario `PRECIO_USD` acepta decimales.
+Por ejemplo; `PRECIO_USD`=`1500.50`
+
+## Cómo ejecutar Docker Compose
+
+Compose levanta dos servicios:
+
+| Servicio | Descripción                         | Puerto |
+| -------- | ----------------------------------- | ------ |
+| `db`     | MySQL 8 con persistencia de volumen | `3306` |
+| `api`    | Backend con NestJS                  | `3000` |
+
+### Comandos válidos
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up --build      # construye imágenes y las levanta
+docker compose up -d           # Levanta los servicios en segundo plano
+docker compose logs -f api     # ver logs del backend
+docker compose down            # detener los contenedores
+docker compose down -v         # detener los contenedores y borrar la DB
 ```
 
-## Deployment
+## Cómo probar la API
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+La api se compone de una endpoint para ver el estado del servidor y los endpoints necesarios para el crud de productos.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Recomendamos swagger para mejor comprensión de la api
+
+La api esta documentada con swagger, por lo cual para una mejor comprensión de la misma recomendamos usarlo para entender los endpoints.
+
+Ya con el backend levantado podemos hacer:
+
+#### Get /api
+
+Para explorar y ejecutar todos los endpoints con Swagger
+
+### GET /health
+
+Se usa para ver el estado del backend.
+
+Retorna:
+
+```json
+{ "status": "ok" }
+```
+
+### /productos
+
+Endpoints para el módulo de productos:
+
+#### POST /productos
+
+Crea un producto.
+
+Recibe:
+
+```json
+{
+  "nombre": "Teclado",
+  "descripcion": "Mecánico",
+  "precio": 15000
+}
+```
+
+Retorna:
+
+```json
+{
+  "id": 1,
+  "nombre": "Teclado",
+  "descripcion": "Mecánico",
+  "precio": "15000.00",
+  "precio_usd": "10.00",
+  "createdAt": "2026-08-09T12:00:00.000Z",
+  "updatedAt": "2026-08-09T12:00:00.000Z"
+}
+```
+
+#### GET /productos
+
+Devuelve un array de productos paginados y la metadata de paginación.
+
+Acepta los parámetros opcionales `page` y `limit`
+
+```
+GET /productos?page=1&limit=10
+```
+
+Retorna:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Teclado",
+      "descripcion": "Mecánico",
+      "precio": "15000.00",
+      "precio_usd": "10.00",
+      "createdAt": "2026-08-09T12:00:00.000Z",
+      "updatedAt": "2026-08-09T12:00:00.000Z"
+    }
+  ],
+  "meta": {
+    "total": 25,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 3
+  }
+}
+```
+
+#### GET /productos/{id}
+
+Devuelve un producto.
+
+Retorna:
+
+```json
+{
+  "id": 1,
+  "nombre": "Teclado",
+  "descripcion": "Mecánico",
+  "precio": "15000.00",
+  "precio_usd": "10.00",
+  "createdAt": "2026-08-09T12:00:00.000Z",
+  "updatedAt": "2026-08-09T12:00:00.000Z"
+}
+```
+
+Si no existe el producto, responde con un `404`:
+
+```json
+{
+  "message": "Producto 999 no encontrado",
+  "error": "Not Found",
+  "statusCode": 404
+}
+```
+
+#### PUT /productos/{id}
+
+Reemplaza un producto.
+
+Recibe:
+
+```json
+{
+  "nombre": "Teclado",
+  "descripcion": "Mecánico RGB",
+  "precio": 18000
+}
+```
+
+Retorna:
+
+```json
+{
+  "id": 1,
+  "nombre": "Teclado",
+  "descripcion": "Mecánico RGB",
+  "precio": "18000.00",
+  "precio_usd": "12.00",
+  "createdAt": "2026-08-09T12:00:00.000Z",
+  "updatedAt": "2026-08-09T12:30:00.000Z"
+}
+```
+
+Si no existe el producto, responde con un `404`:
+
+```json
+{
+  "message": "Producto 999 no encontrado",
+  "error": "Not Found",
+  "statusCode": 404
+}
+```
+
+#### DELETE /productos/{id}
+
+Elimina un producto.
+
+Retorna:
+
+```json
+{
+  "message": "Producto 1 eliminado correctamente"
+}
+```
+
+Si no existe el producto, responde con un `404`:
+
+```json
+{
+  "message": "Producto 999 no encontrado",
+  "error": "Not Found",
+  "statusCode": 404
+}
+```
+
+## Tests
+
+Para correr las suites de tests se usa el comando
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm test
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-# products_rest_api_nestjs
+Los tests corren con un repositorio en memoria.
