@@ -6,6 +6,8 @@ import { ProductosRepository } from './repository/productos.repository';
 import { EnvironmentVariables } from 'src/config/env.validation';
 import { ConfigService } from '@nestjs/config';
 import { Product } from './entities/producto.entity';
+import { PaginationResult } from 'src/common/interfaces/pagination.interface';
+import { PaginationQueryDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class ProductosService {
@@ -35,9 +37,21 @@ export class ProductosService {
     return this.addUsdPriceToProduct(product);
   }
 
-  async findAll(): Promise<Product[]> {
-    const products = await this.repository.findAll();
-    return this.mapUsdPriceToProducts(products);
+  async findAll(query: PaginationQueryDto): Promise<PaginationResult<Product>> {
+    const [productos, total] = await Promise.all([
+      this.repository.findAll({ skip: query.skip, take: query.limit }),
+      this.repository.count(),
+    ]);
+
+    return {
+      data: this.mapUsdPriceToProducts(productos),
+      meta: {
+        total,
+        page: query.page,
+        limit: query.limit,
+        totalPages: Math.ceil(total / query.limit),
+      },
+    };
   }
 
   async findOne(id: number): Promise<Product> {

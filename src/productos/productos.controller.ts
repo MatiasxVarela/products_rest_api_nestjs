@@ -7,12 +7,15 @@ import {
   Delete,
   Put,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ProductosService } from './productos.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Product } from './entities/producto.entity';
+import { PaginationResult } from 'src/common/interfaces/pagination.interface';
+import { PaginationQueryDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('productos')
 @Controller('productos')
@@ -25,8 +28,10 @@ export class ProductosController {
   }
 
   @Get()
-  findAll(): Promise<Product[]> {
-    return this.productosService.findAll();
+  findAll(
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginationResult<Product>> {
+    return this.productosService.findAll(query);
   }
 
   @Get(':id')

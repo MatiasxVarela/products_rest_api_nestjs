@@ -2,13 +2,22 @@ import { Producto } from 'src/generated/prisma/client';
 import { NewProducto, ProductosRepository } from './productos.repository';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Pagination } from 'src/common/interfaces/pagination.interface';
 
 @Injectable()
 export class PrismaProductosRepository implements ProductosRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Producto[]> {
-    return this.prisma.producto.findMany();
+  count(): Promise<number> {
+    return this.prisma.producto.count();
+  }
+
+  findAll({ skip, take }: Pagination): Promise<Producto[]> {
+    return this.prisma.producto.findMany({
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async findById(id: number): Promise<Producto | null> {

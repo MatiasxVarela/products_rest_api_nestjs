@@ -1,3 +1,4 @@
+import { Pagination } from 'src/common/interfaces/pagination.interface';
 import { Prisma, Producto } from '../../generated/prisma/client';
 import { NewProducto, ProductosRepository } from './productos.repository';
 
@@ -5,8 +6,12 @@ export class MemoryProductosRepository implements ProductosRepository {
   private readonly rows = new Map<number, Producto>();
   private nextId = 1;
 
-  findAll(): Promise<Producto[]> {
-    return Promise.resolve([...this.rows.values()]);
+  count(): Promise<number> {
+    return Promise.resolve(this.rows.size);
+  }
+
+  findAll({ skip, take }: Pagination): Promise<Producto[]> {
+    return Promise.resolve([...this.rows.values()].slice(skip, skip + take));
   }
 
   findById(id: number): Promise<Producto | null> {

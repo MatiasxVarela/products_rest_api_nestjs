@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ProductosService } from './productos.service';
 import { ProductosRepository } from './repository/productos.repository';
 import { MemoryProductosRepository } from './repository/memory-productos.repository';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 describe('ProductosService', () => {
   let service: ProductosService;
@@ -19,6 +20,21 @@ describe('ProductosService', () => {
     }).compile();
 
     service = moduleRef.get(ProductosService);
+  });
+
+  it('Calcula bien la paginacion', async () => {
+    await service.create(nuevo);
+    await service.create(nuevo);
+    await service.create(nuevo);
+
+    const query = new PaginationQueryDto();
+    query.limit = 2;
+
+    const resultado = await service.findAll(query);
+
+    expect(resultado.data).toHaveLength(2);
+    expect(resultado.meta.total).toBe(3);
+    expect(resultado.meta.totalPages).toBe(2);
   });
 
   it('Calcula bien el precio en dolares', async () => {

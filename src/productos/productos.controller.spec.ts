@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ProductosController } from './productos.controller';
 import { ProductosService } from './productos.service';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 describe('ProductosController', () => {
   let controller: ProductosController;
@@ -22,7 +23,7 @@ describe('ProductosController', () => {
   });
 
   it('Le pasa el listado al service', async () => {
-    await controller.findAll();
+    await controller.findAll(new PaginationQueryDto());
 
     expect(serviceMock.findAll).toHaveBeenCalled();
   });
