@@ -12,9 +12,8 @@ import {
 import { ProductosService } from './productos.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { Product } from './entities/producto.entity';
-import { PaginationResult } from 'src/common/interfaces/pagination.interface';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { PaginatedProductos, Product } from './entities/producto.entity';
 import { PaginationQueryDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('productos')
@@ -28,9 +27,7 @@ export class ProductosController {
   }
 
   @Get()
-  findAll(
-    @Query() query: PaginationQueryDto,
-  ): Promise<PaginationResult<Product>> {
+  findAll(@Query() query: PaginationQueryDto): Promise<PaginatedProductos> {
     return this.productosService.findAll(query);
   }
 
@@ -48,6 +45,7 @@ export class ProductosController {
   }
 
   @Delete(':id')
+  @ApiOkResponse({ example: { message: 'Producto 1 eliminado correctamente' } })
   remove(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
     return this.productosService.remove(id);
   }
