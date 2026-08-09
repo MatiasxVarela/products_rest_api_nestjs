@@ -1,20 +1,29 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ProductosController } from './productos.controller';
 import { ProductosService } from './productos.service';
 
 describe('ProductosController', () => {
   let controller: ProductosController;
+  const serviceMock = {
+    findAll: jest.fn(() => Promise.resolve([])),
+    findOne: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+  };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef = await Test.createTestingModule({
       controllers: [ProductosController],
-      providers: [ProductosService],
+      providers: [{ provide: ProductosService, useValue: serviceMock }],
     }).compile();
 
-    controller = module.get<ProductosController>(ProductosController);
+    controller = moduleRef.get(ProductosController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it('Le pasa el listado al service', async () => {
+    await controller.findAll();
+
+    expect(serviceMock.findAll).toHaveBeenCalled();
   });
 });

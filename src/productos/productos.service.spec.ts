@@ -1,18 +1,56 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ProductosService } from './productos.service';
+import { ProductosRepository } from './repository/productos.repository';
+import { MemoryProductosRepository } from './repository/memory-productos.repository';
 
 describe('ProductosService', () => {
   let service: ProductosService;
+  const nuevo = { nombre: 'Producto', descripcion: 'Prueba', precio: 15000 };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [ProductosService],
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        ProductosService,
+        { provide: ProductosRepository, useClass: MemoryProductosRepository },
+        { provide: ConfigService, useValue: { get: () => 1500 } },
+      ],
     }).compile();
 
-    service = module.get<ProductosService>(ProductosService);
+    service = moduleRef.get(ProductosService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('Calcula bien el precio en dolares', async () => {
+    const producto = await service.create(nuevo);
+
+    expect(producto.precio).toBe('15000.00');
+    expect(producto.precio_usd).toBe('10.00');
+  });
+
+  it('Hace bien el redondeo con decimanles', async () => {
+    const producto = await service.create({ ...nuevo, precio: 1000 });
+
+    expect(producto.precio_usd).toBe('0.67');
+  });
+
+  it('Tira 404 cuando no encuentra el producto', async () => {
+    await expect(service.findOne(999)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('Elimina el producto de la db', async () => {
+    const creado = await service.create(nuevo);
+
+    await service.remove(creado.id);
+
+    await expect(service.findOne(creado.id)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('No deja eliminar un producto que no existe', async () => {
+    await expect(service.remove(999)).rejects.toBeInstanceOf(NotFoundException);
   });
 });
