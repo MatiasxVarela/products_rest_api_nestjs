@@ -8,6 +8,12 @@ services:
       - '${DB_PORT:?DB_PORT is required}:3306'
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-p${DB_ROOT_PASSWORD}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   api:
     build: .
@@ -18,7 +24,8 @@ services:
     environment:
       DATABASE_URL: mysql://root:${DB_ROOT_PASSWORD}@db:3306/${DB_NAME}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: sh -c "npx prisma migrate deploy && node dist/main"
 
 volumes:
