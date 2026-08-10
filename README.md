@@ -23,9 +23,9 @@ npm install
 
 cp .env.example .env
 
-docker compose up -d db
+docker compose up -d --wait db
 
-npx prisma migrate dev
+npx prisma migrate deploy
 
 npx prisma generate
 
