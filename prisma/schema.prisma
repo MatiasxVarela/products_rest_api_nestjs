@@ -17,7 +17,7 @@ model Producto {
   descripcion String   @db.Text
   precio      Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   @@map("productos")
 }

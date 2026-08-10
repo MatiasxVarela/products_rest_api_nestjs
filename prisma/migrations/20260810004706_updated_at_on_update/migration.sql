@@ -1,0 +1,4 @@
+-- This is an empty migration.
+ALTER TABLE `productos`
+  MODIFY `updated_at` TIMESTAMP(0) NOT NULL
+  DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0);
